@@ -1,0 +1,8 @@
+let client = Client::new();
+    let mut map = HashMap::new();
+    map.insert("data", json_all_data.clone());
+    match client.post("http://127.0.0.1:3000/rust").json(&map).send() {
+        Ok(response) => println!("response {:?}", response),
+        Err(err) => println!("some err {:?}", err)
+    }
+    println!("hello all {:?}", json_all_data);
