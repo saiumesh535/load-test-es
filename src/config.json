@@ -1,4 +1,4 @@
 {
-  "url": "http://localhost:3000",
-  "index": "asas"
+  "url": "https://search-apty-insights-development-es-ncg3eesqnivfzb4csusb2i6ov4.us-east-1.es.amazonaws.com/",
+  "index": "test-es"
 }

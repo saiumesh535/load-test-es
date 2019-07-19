@@ -2,8 +2,13 @@ use std::path::{PathBuf, Path};
 use std::fs;
 use std::fs::{File};
 use std::ffi::OsStr;
-use serde_json::{ Value };
+use serde_json::{Value, Map};
 use std::io::Read;
+use reqwest::{ Client };
+
+use crate::config::Config;
+
+//const HTTP_CLIENT: Client = Client::new();
 
 fn get_all_json_file_paths(cwd: &PathBuf) -> Vec<PathBuf> {
     let mut file_paths: Vec<PathBuf> = Vec::new();
@@ -36,7 +41,16 @@ fn read_json_file_content(path: &PathBuf) -> String {
     contents
 }
 
-pub fn read_json_files(cwd: PathBuf) {
+fn insert_es(input: &Map<String, Value>, url: &String) {
+    let http_client = Client::new();
+    match http_client.post(url.as_str())
+        .json(input).send() {
+        Ok(_) => println!("sucess"),
+        Err(err) => panic!("unable to insert {}", err)
+    };
+}
+
+pub fn read_json_files(cwd: PathBuf, config: Config) {
     let mut json_file_paths = get_all_json_file_paths(&cwd);
     let mut json_all_data: Vec<Vec<Value>> = Vec::new();
     json_file_paths.sort();
@@ -48,5 +62,13 @@ pub fn read_json_files(cwd: PathBuf) {
         };
         json_all_data.push(json_data);
     };
-    println!("{:?}", json_all_data);
+    let url =  format!("{url}{index}/_doc", url = config.url, index=config.index);
+    for parent in json_all_data {
+        for mut child in parent {
+            match child.as_object_mut() {
+                Some(data) => insert_es(data, &url),
+                None => println!("could not!!")
+            }
+        }
+    }
 }

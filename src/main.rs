@@ -2,15 +2,12 @@ use std::fs::File;
 use std::path::{PathBuf};
 use std::env;
 use std::io::Read;
-use serde::{ Serialize, Deserialize };
 
 mod read_json;
+mod config;
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Config {
-    url: String,
-    index: String
-}
+use config::Config;
+
 
 fn get_config(path: PathBuf) -> String {
     let mut f = match File::open(path) {
@@ -31,9 +28,9 @@ fn main() {
         Err(_err) => panic!("unable to get CWD {}", _err)
     };
     let config_file_path = cwd.join("src").join("config.json");
-    let _: Config = match serde_json::from_str(get_config(config_file_path).as_str()) {
+    let config: Config = match serde_json::from_str(get_config(config_file_path).as_str()) {
         Ok(data) => data,
         Err(err) => panic!("{:?}", err)
     };
-    read_json::read_json_files(cwd);
+    read_json::read_json_files(cwd, config);
 }
