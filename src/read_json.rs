@@ -41,9 +41,8 @@ fn read_json_file_content(path: &PathBuf) -> String {
     contents
 }
 
-fn insert_es(input: &Map<String, Value>, url: &String) {
-    let http_client = Client::new();
-    match http_client.post(url.as_str())
+fn insert_es(input: &Map<String, Value>, url: &String, client: &Client) {
+    match client.post(url.as_str())
         .json(input).send() {
         Ok(_) => println!("sucess"),
         Err(err) => panic!("unable to insert {}", err)
@@ -63,10 +62,11 @@ pub fn read_json_files(cwd: PathBuf, config: Config) {
         json_all_data.push(json_data);
     };
     let url =  format!("{url}{index}/_doc", url = config.url, index=config.index);
+    let client = Client::new();
     for parent in json_all_data {
         for mut child in parent {
             match child.as_object_mut() {
-                Some(data) => insert_es(data, &url),
+                Some(data) => insert_es(data, &url, &client),
                 None => println!("could not!!")
             }
         }
