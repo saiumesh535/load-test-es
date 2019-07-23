@@ -10,3 +10,4 @@ edition = "2018"
 serde_json = "1.0.40"
 serde = { version = "1.0.94", features = ["derive"] }
 reqwest = "0.9.18"
+rayon = "1.1.0"
