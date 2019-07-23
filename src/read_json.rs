@@ -5,6 +5,7 @@ use std::ffi::OsStr;
 use serde_json::{Value, Map};
 use std::io::Read;
 use reqwest::{ Client };
+use rayon::prelude::*;
 
 use crate::config::Config;
 
@@ -41,34 +42,33 @@ fn read_json_file_content(path: &PathBuf) -> String {
     contents
 }
 
-fn insert_es(input: &Map<String, Value>, url: &String, client: &Client) {
-    match client.post(url.as_str())
-        .json(input).send() {
-        Ok(_) => println!("sucess"),
-        Err(err) => panic!("unable to insert {}", err)
-    };
+fn insert_es(input: &Map<String, Value>, url: &String, client: &Client, file_name: &OsStr) {
+    let response = client.post(url.as_str()).json(input).send();
+    if response.is_err() {
+        panic!("unable insert data file name {:?} with error {:?}", file_name, response.unwrap_err());
+    }
 }
 
 pub fn read_json_files(cwd: PathBuf, config: Config) {
     let mut json_file_paths = get_all_json_file_paths(&cwd);
-    let mut json_all_data: Vec<Vec<Value>> = Vec::new();
     json_file_paths.sort();
+    let url =  format!("{url}{index}/_doc", url = config.url, index=config.index);
+    let client = Client::new();
     for path in json_file_paths {
-        let  file_name = path.file_name();
-        let json_data: Vec<Value> = match serde_json::from_str(read_json_file_content(&path).as_str()) {
+        let  file_name = match path.file_name() {
+            Some(filename) => filename,
+            None => OsStr::new("unKnown")
+        };
+        let mut json_data: Vec<Value> = match serde_json::from_str(read_json_file_content(&path).as_str()) {
             Ok(value) => value,
             Err(_err) => panic!("unable convert for fil {:?} with err {:?}", file_name, _err)
         };
-        json_all_data.push(json_data);
-    };
-    let url =  format!("{url}{index}/_doc", url = config.url, index=config.index);
-    let client = Client::new();
-    for parent in json_all_data {
-        for mut child in parent {
-            match child.as_object_mut() {
-                Some(data) => insert_es(data, &url, &client),
-                None => println!("could not!!")
+        json_data.par_iter_mut().for_each(|payload| {
+             match payload.as_object_mut() {
+                Some(payload) => insert_es(payload, &url, &client, &file_name),
+                None => println!("could not get data from {:?}", &file_name)
             }
-        }
-    }
+        });
+        println!("success for {:?}", &file_name);
+    };
 }
