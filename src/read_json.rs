@@ -55,10 +55,7 @@ pub fn read_json_files(cwd: PathBuf, config: Config) {
     let url =  format!("{url}{index}/_doc", url = config.url, index=config.index);
     let client = Client::new();
     for path in json_file_paths {
-        let  file_name = match path.file_name() {
-            Some(filename) => filename,
-            None => OsStr::new("unKnown")
-        };
+        let  file_name = path.file_name().unwrap_or(OsStr::new("UnKnown"));
         let mut json_data: Vec<Value> = match serde_json::from_str(read_json_file_content(&path).as_str()) {
             Ok(value) => value,
             Err(_err) => panic!("unable convert for fil {:?} with err {:?}", file_name, _err)
