@@ -6,6 +6,7 @@ use serde_json::{Value, Map};
 use std::io::Read;
 use reqwest::{ Client };
 use rayon::prelude::*;
+use std::env;
 
 use crate::config::Config;
 
@@ -15,6 +16,7 @@ fn get_all_json_file_paths(cwd: &PathBuf) -> Vec<PathBuf> {
     let mut file_paths: Vec<PathBuf> = Vec::new();
     let data_folder = cwd.join("src").join("data");
     let files = fs::read_dir(data_folder).expect("unable to locale data folder");
+    let file_name = env::var("file_name").unwrap_or(String::from("unknown"));
     for file in files {
         let file_entry = file.expect("unable to get file inside data folder");
         let path = &file_entry.path();
@@ -23,7 +25,14 @@ fn get_all_json_file_paths(cwd: &PathBuf) -> Vec<PathBuf> {
             None => OsStr::new("")
         };
         if file_type == "json" {
-            file_paths.push(file_entry.path())
+            if file_name != String::from("unknown") {
+                if file_entry.file_name() == OsStr::new(&file_name) {
+                    file_paths.push(file_entry.path());
+                    return file_paths;
+                }
+            } else {
+                file_paths.push(file_entry.path());
+            }
         }
     };
     return file_paths;
@@ -51,9 +60,16 @@ fn insert_es(input: &Map<String, Value>, url: &String, client: &Client, file_nam
 
 pub fn read_json_files(cwd: PathBuf, config: Config) {
     let mut json_file_paths = get_all_json_file_paths(&cwd);
+    // check if user given file exists or not
+    let user_file_name = env::var("file_name").unwrap_or("unknown".to_string());
+    if user_file_name != "unknown".to_string() && json_file_paths.len() == 0 {
+        println!("unable to find {file_name} check file exists or not", file_name=user_file_name);
+        return;
+    }
     json_file_paths.sort();
     let url =  format!("{url}{index}/_doc", url = config.url, index=config.index);
     let client = Client::new();
+
     for path in json_file_paths {
         let  file_name = path.file_name().unwrap_or(OsStr::new("UnKnown"));
         let mut json_data: Vec<Value> = match serde_json::from_str(read_json_file_content(&path).as_str()) {

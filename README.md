@@ -29,3 +29,11 @@ to connect Elastic search and it's index, this will use **config.json** file as 
     "Index": "someesindex" // index doesn't support some characters - so don't use 😂
 }
 ```
+
+# Running single file
+
+sometimes you want to run single file instead multiple. to run single file run following command
+
+```cmd
+file_name=a.json ./files.exe
+```
