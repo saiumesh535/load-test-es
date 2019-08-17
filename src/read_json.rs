@@ -27,10 +27,11 @@ fn get_all_json_file_paths(cwd: &PathBuf) -> Vec<PathBuf> {
         if file_type == "json" {
             if file_name != String::from("unknown") {
                 if file_entry.file_name() == OsStr::new(&file_name) {
-                    file_paths.push(file_entry.path())
+                    file_paths.push(file_entry.path());
+                    return file_paths;
                 }
             } else {
-                file_paths.push(file_entry.path())
+                file_paths.push(file_entry.path());
             }
         }
     };
