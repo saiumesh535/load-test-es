@@ -1,7 +1,7 @@
 # loadtest-es
 Loading test data in elastic search
 
-##Loading test data into Elastic search from json files
+**Loading test data into Elastic search from json files**
 
 Commands to run
 
