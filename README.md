@@ -19,7 +19,7 @@ cargo run
 FILE_NAME=a.json go run main.go
 ``` -->
 
-##config
+**config**
 
 to connect Elastic search and it's index, this will use **config.json** file as follows
 
